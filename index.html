@@ -3,54 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cooperativas de Río Negro</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <title>Sistema de Cooperativas de Río Negro</title>
     <link rel="stylesheet" href="styles.css">
-    
     <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Cooperativas de Río Negro</h1>
-            <div class="filters">
-                <label for="departamento">Departamento:</label>
-                <select id="departamento">
-                    <option value="all">Todos</option>
-                </select>
-                
-                <label for="tipo">Tipo de Cooperativa:</label>
-                <select id="tipo">
-                    <option value="all">Todos</option>
-                </select>
-                
-                <button id="resetFilters">Resetear Filtros</button>
-            </div>
+            <h1>Sistema de Gestión de Cooperativas</h1>
+            <nav>
+                <ul class="tabs">
+                    <li><a href="#create" class="tab active">Crear</a></li>
+                    <li><a href="#search" class="tab">Buscar</a></li>
+                    <li><a href="#edit" class="tab">Editar</a></li>
+                    <li><a href="#delete" class="tab">Borrar</a></li>
+                </ul>
+            </nav>
         </header>
         
         <main>
-            <div id="map"></div>
-            <div id="cooperativa-list">
-                <h2>Listado de Cooperativas</h2>
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Buscar cooperativa...">
+            <div id="create" class="tab-content active">
+                <h2>Crear Nuevo Registro</h2>
+                <form id="createForm">
+                  <div class="form-group">
+                    <label for="Legajo">Legajo:</label>
+                    <input type="text" id="Legajo" name="Legajo" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="Cooperativa">Cooperativa:</label>
+                    <input type="text" id="Cooperativa" name="Cooperativa" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="Matrícula">Matrícula:</label>
+                    <input type="text" id="Matrícula" name="Matrícula" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="ActaPcial">Acta provincial:</label>
+                    <input type="text" id="ActaPcial" name="ActaPcial" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="EmisMat">Fecha de emisión matrícula:</label>
+                    <input type="date" id="EmisMat" name="EmisMat" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="Dirección">Dirección:</label>
+                    <input type="text" id="Dirección" name="Dirección" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="DirecciónVerificada">Dirección verificada:</label>
+                    <input type="text" id="DirecciónVerificada" name="DirecciónVerificada" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="Tel">Teléfono:</label>
+                    <input type="tel" id="Tel" name="Tel">
+                  </div>
+                  <div class="form-group">
+                    <label for="Presid">Presidente:</label>
+                    <input type="text" id="Presid" name="Presid" required>
+                  </div> 
+                  <div class="form-group">
+                    <label for="Mail">Correo electrónico:</label>
+                    <input type="email" id="Mail" name="Mail" required>
+                  </div> 
+                  <div class="form-group">
+                    <label for="EstadoEntid">Fecha Estado Entidad:</label>
+                    <input type="date" id="EstadoEntid" name="EstadoEntid" required>
+                  </div>                 
+                  <div class="form-group">
+                    <label for="FechaAsamb">Fecha Asamblea:</label>
+                    <input type="date" id="FechaAsamb" name="FechaAsamb" required>
+                  </div> 
+                  <div class="form-group">
+                    <label for="TipoAsamb">Tipo de asamblea:</label>
+                    <select id="TipoAsamb" name="TipoAsamb" required>
+                      <option value="">Seleccionar...</option>
+                      <option value="Ordinaria">Ordinaria</option>
+                      <option value="Ordinaria autoconvocada">Ordinaria autoconvocada</option>
+                      <option value="Extraordinaria">Extraordinaria</option>
+                      <option value="Extraordinaria autoconvocada">Extraordinaria autoconvocada</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="ConsejoAdmin">Consejo administrativo:</label>
+                    <input type="text" id="ConsejoAdmin" name="ConsejoAdmin">
+                  </div>
+                  <div class="form-group">
+                    <label for="Sindicatura">Sindicatura:</label>
+                    <input type="text" id="Sindicatura" name="Sindicatura">
+                  </div>                    
+                  <div class="form-group">
+                    <label for="Localidad">Localidad:</label>
+                    <input type="text" id="Localidad" name="Localidad">
+                  </div>
+                  <div class="form-group">
+                    <label for="Departamento">Departamento:</label>
+                    <select id="Departamento" name="Departamento" required>
+                      <option value="">Seleccionar departamento...</option>
+                      <option value="Adolfo Alsina">Adolfo Alsina</option>
+                      <option value="Avellaneda">Avellaneda</option>
+                      <option value="Bariloche">Bariloche</option>
+                      <option value="Conesa">Conesa</option>
+                      <option value="El Cuy">El Cuy</option>
+                      <option value="General Roca">General Roca</option>
+                      <option value="9 de Julio">9 de Julio</option>
+                      <option value="Ñorquincó">Ñorquincó</option>
+                      <option value="Pichi Mahuida">Pichi Mahuida</option>
+                      <option value="Pilcaniyeu">Pilcaniyeu</option>
+                      <option value="San Antonio">San Antonio</option>
+                      <option value="Valcheta">Valcheta</option>
+                      <option value="25 de Mayo">25 de Mayo</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="CodPost">Código postal:</label>
+                    <input type="text" id="CodPost" name="CodPost">
+                  </div>
+                  <div class="form-group">
+                    <label for="Cuit">CUIT:</label>
+                    <input type="text" id="Cuit" name="Cuit" placeholder="XX-XXXXXXXX-X" maxlength="13" pattern="[0-9]{2}-[0-9]{8}-[0-9]{1}">
+                  </div>
+                  <div class="form-group">
+                    <label for="Tipo">Tipo:</label>
+                    <select id="Tipo" name="Tipo" required>
+                      <option value="">Seleccionar tipo...</option>
+                      <option value="Agrícola">Agrícola</option>
+                      <option value="Agrícola-ganadera">Agrícola-ganadera</option>
+                      <option value="Consumo">Consumo</option>
+                      <option value="Federación">Federación</option>
+                      <option value="Frutícola">Frutícola</option>
+                      <option value="Frutihortícola">Frutihortícola</option>
+                      <option value="Ganadera">Ganadera</option>
+                      <option value="Producción">Producción</option>
+                      <option value="Provisión">Provisión</option>
+                      <option value="Servicios">Servicios</option>
+                      <option value="Servicios públicos">Servicios públicos</option>
+                      <option value="Trabajo">Trabajo</option>
+                      <option value="Vivienda">Vivienda</option>
+                    </select>
+                  </div>                
+                  <div class="form-group">
+                    <label for="Subtipo">Subtipo:</label>
+                    <select id="Subtipo" name="Subtipo">
+                      <option value="">Seleccionar subtipo...</option>
+                      <option value="Atención de personas">Atención de personas</option>
+                      <option value="Audiovisual">Audiovisual</option>
+                      <option value="Bienes y servicios">Bienes y servicios</option>
+                      <option value="Comercialización e industrialización">Comercialización e industrialización</option>
+                      <option value="Comercialización y consumo">Comercialización y consumo</option>
+                      <option value="Comercialización y explotación">Comercialización y explotación</option>
+                      <option value="Comercialización y producción">Comercialización y producción</option>
+                      <option value="Comercialización y provisión">Comercialización y provisión</option>
+                      <option value="Comercialización y transporte">Comercialización y transporte</option>
+                      <option value="Construcción">Construcción</option>
+                      <option value="Construcción de estaciones transformadores de transmisión">Construcción de estaciones transformadores de transmisión</option>
+                      <option value="Cultura">Cultura</option>
+                      <option value="Diseño y producción">Diseño y producción</option>
+                      <option value="Educativa">Educativa</option>
+                      <option value="Empaque y embalaje de frutas">Empaque y embalaje de frutas</option>
+                      <option value="Estacionamiento medido y pago">Estacionamiento medido y pago</option>
+                      <option value="No aplica">No aplica</option>
+                      <option value="Producción y consumo">Producción y consumo</option>
+                      <option value="Radiodifusión">Radiodifusión</option>
+                      <option value="Rurales">Rurales</option>
+                    </select>
+                  </div>                    
+                  <div class="form-group">
+                    <label for="Observaciones">Observaciones:</label>
+                    <textarea id="Observaciones" name="Observaciones" rows="3"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="Latitud">Latitud:</label>
+                    <input type="text" id="Latitud" name="Latitud">
+                  </div>
+                  <div class="form-group">
+                    <label for="Longitud">Longitud:</label>
+                    <input type="text" id="Longitud" name="Longitud">
+                  </div>
+                  <button type="submit" class="btn">Crear Registro</button>
+                </form>
+            </div>
+            
+            <div id="search" class="tab-content">
+                <h2>Buscar Cooperativas</h2>
+                <form id="searchForm">
+                    <div class="form-group">
+                        <label for="searchTerm">Buscar por nombre o matrícula:</label>
+                        <input type="text" id="searchTerm" name="searchTerm">
+                    </div>
+                    <div class="form-group">
+                        <label for="searchDepartamento">Departamento:</label>
+                        <select id="searchDepartamento" name="searchDepartamento">
+                            <option value="">Todos los departamentos</option>
+                            <option value="Adolfo Alsina">Adolfo Alsina</option>
+                            <option value="Avellaneda">Avellaneda</option>
+                            <option value="Bariloche">Bariloche</option>
+                            <option value="Conesa">Conesa</option>
+                            <option value="El Cuy">El Cuy</option>
+                            <option value="General Roca">General Roca</option>
+                            <option value="9 de Julio">9 de Julio</option>
+                            <option value="Ñorquincó">Ñorquincó</option>
+                            <option value="Pichi Mahuida">Pichi Mahuida</option>
+                            <option value="Pilcaniyeu">Pilcaniyeu</option>
+                            <option value="San Antonio">San Antonio</option>
+                            <option value="Valcheta">Valcheta</option>
+                            <option value="25 de Mayo">25 de Mayo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="searchTipo">Tipo:</label>
+                        <select id="searchTipo" name="searchTipo">
+                            <option value="">Todos los tipos</option>
+                            <option value="Agrícola">Agrícola</option>
+                            <option value="Agrícola-ganadera">Agrícola-ganadera</option>
+                            <option value="Consumo">Consumo</option>
+                            <option value="Federación">Federación</option>
+                            <option value="Frutícola">Frutícola</option>
+                            <option value="Frutihortícola">Frutihortícola</option>
+                            <option value="Ganadera">Ganadera</option>
+                            <option value="Producción">Producción</option>
+                            <option value="Provisión">Provisión</option>
+                            <option value="Servicios">Servicios</option>
+                            <option value="Servicios públicos">Servicios públicos</option>
+                            <option value="Trabajo">Trabajo</option>
+                            <option value="Vivienda">Vivienda</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Buscar</button>
+                </form>
+                <div id="searchResults" class="results-container">
+                    <!-- Aquí se mostrarán los resultados de búsqueda -->
                 </div>
-                <ul id="cooperativas"></ul>
+            </div>
+            
+            <div id="edit" class="tab-content">
+                <h2>Editar Cooperativa</h2>
+                <div class="search-first">
+                    <p>Primero busca la cooperativa que deseas editar:</p>
+                    <form id="editSearchForm">
+                        <div class="form-group">
+                            <label for="editSearchTerm">Buscar por nombre o matrícula:</label>
+                            <input type="text" id="editSearchTerm" name="editSearchTerm" required>
+                            <button type="submit" class="btn">Buscar</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="editSearchResults" class="results-container">
+                    <!-- Aquí se mostrarán los resultados de búsqueda para editar -->
+                </div>
+                <div id="editFormContainer" style="display: none;">
+                    <!-- Aquí se cargará dinámicamente el formulario de edición -->
+                </div>
+            </div>
+            
+            <div id="delete" class="tab-content">
+                <h2>Eliminar Cooperativa</h2>
+                <div class="search-first">
+                    <p>Primero busca la cooperativa que deseas eliminar:</p>
+                    <form id="deleteSearchForm">
+                        <div class="form-group">
+                            <label for="deleteSearchTerm">Buscar por nombre o matrícula:</label>
+                            <input type="text" id="deleteSearchTerm" name="deleteSearchTerm" required>
+                            <button type="submit" class="btn">Buscar</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="deleteSearchResults" class="results-container">
+                    <!-- Aquí se mostrarán los resultados de búsqueda para eliminar -->
+                </div>
             </div>
         </main>
         
-        <div id="modal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2 id="modal-title"></h2>
-                <div id="modal-content"></div>
-            </div>
+        <div id="notification" class="notification">
+            <p id="notificationMessage"></p>
+            <span class="close-notification">&times;</span>
         </div>
     </div>
+    
     <script src="script.js"></script>
 </body>
 </html>
