@@ -1,6 +1,6 @@
 // Configuración de Supabase
 const SUPABASE_URL = 'https://qxiboffwgzppqkayuzxp.supabase.co';
-const SUPABASE_KEY = 'tu-clave-anon-publica-aquí'; // Reemplaza con tu clave anónima de Supabase
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4aWJvZmZ3Z3pwcHFrYXl1enhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4NTc4NDUsImV4cCI6MjA2NjQzMzg0NX0.BAFrU3IOLz3NRYuAKSwJx2nbZqjsXMVAb9tHAFMpP0o'; // Reemplaza con tu clave anónima de Supabase
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Variables globales
