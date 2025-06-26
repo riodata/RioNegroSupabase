@@ -1,26 +1,12 @@
 {
-  "name": "google-sheets-webhook",
+  "name": "rio-negro-supabase",
   "version": "1.0.0",
-  "description": "Webhook server for Google Sheets CRUD operations",
+  "description": "Sistema de gestión de cooperativas de Río Negro",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "google-spreadsheet": "^4.1.2",
-    "google-auth-library": "^9.4.1",
-    "dotenv": "^16.3.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "keywords": ["webhook", "google-sheets", "express", "api"],
-  "author": "Tu Nombre",
-  "license": "MIT"
+    "express": "^4.18.2"
+  }
 }
