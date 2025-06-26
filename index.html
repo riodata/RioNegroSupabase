@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Cooperativas de Río Negro</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
     <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="header">
             <h1>Sistema de Gestión de Cooperativas</h1>
+            <p>Provincia de Río Negro</p>
             <nav>
                 <ul class="tabs">
                     <li><a href="#create" class="tab active">Crear</a></li>
@@ -22,7 +23,7 @@
             </nav>
         </header>
         
-        <main>
+        <main class="content">
             <div id="create" class="tab-content active">
                 <h2>Crear Nuevo Registro</h2>
                 <form id="createForm">
@@ -180,57 +181,61 @@
                     <label for="Longitud">Longitud:</label>
                     <input type="text" id="Longitud" name="Longitud">
                   </div>
-                  <button type="submit" class="btn">Crear Registro</button>
+                  <button type="submit" class="btn btn-success">Crear Registro</button>
                 </form>
             </div>
             
             <div id="search" class="tab-content">
                 <h2>Buscar Cooperativas</h2>
-                <form id="searchForm">
-                    <div class="form-group">
-                        <label for="searchTerm">Buscar por nombre o matrícula:</label>
-                        <input type="text" id="searchTerm" name="searchTerm">
-                    </div>
-                    <div class="form-group">
-                        <label for="searchDepartamento">Departamento:</label>
-                        <select id="searchDepartamento" name="searchDepartamento">
-                            <option value="">Todos los departamentos</option>
-                            <option value="Adolfo Alsina">Adolfo Alsina</option>
-                            <option value="Avellaneda">Avellaneda</option>
-                            <option value="Bariloche">Bariloche</option>
-                            <option value="Conesa">Conesa</option>
-                            <option value="El Cuy">El Cuy</option>
-                            <option value="General Roca">General Roca</option>
-                            <option value="9 de Julio">9 de Julio</option>
-                            <option value="Ñorquincó">Ñorquincó</option>
-                            <option value="Pichi Mahuida">Pichi Mahuida</option>
-                            <option value="Pilcaniyeu">Pilcaniyeu</option>
-                            <option value="San Antonio">San Antonio</option>
-                            <option value="Valcheta">Valcheta</option>
-                            <option value="25 de Mayo">25 de Mayo</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="searchTipo">Tipo:</label>
-                        <select id="searchTipo" name="searchTipo">
-                            <option value="">Todos los tipos</option>
-                            <option value="Agrícola">Agrícola</option>
-                            <option value="Agrícola-ganadera">Agrícola-ganadera</option>
-                            <option value="Consumo">Consumo</option>
-                            <option value="Federación">Federación</option>
-                            <option value="Frutícola">Frutícola</option>
-                            <option value="Frutihortícola">Frutihortícola</option>
-                            <option value="Ganadera">Ganadera</option>
-                            <option value="Producción">Producción</option>
-                            <option value="Provisión">Provisión</option>
-                            <option value="Servicios">Servicios</option>
-                            <option value="Servicios públicos">Servicios públicos</option>
-                            <option value="Trabajo">Trabajo</option>
-                            <option value="Vivienda">Vivienda</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn">Buscar</button>
-                </form>
+                <div class="search-container">
+                    <form id="searchForm">
+                        <div class="search-row">
+                            <div class="search-field">
+                                <label for="searchTerm">Buscar por nombre o matrícula:</label>
+                                <input type="text" id="searchTerm" name="searchTerm">
+                            </div>
+                            <div class="search-dropdown">
+                                <label for="searchDepartamento">Departamento:</label>
+                                <select id="searchDepartamento" name="searchDepartamento">
+                                    <option value="">Todos los departamentos</option>
+                                    <option value="Adolfo Alsina">Adolfo Alsina</option>
+                                    <option value="Avellaneda">Avellaneda</option>
+                                    <option value="Bariloche">Bariloche</option>
+                                    <option value="Conesa">Conesa</option>
+                                    <option value="El Cuy">El Cuy</option>
+                                    <option value="General Roca">General Roca</option>
+                                    <option value="9 de Julio">9 de Julio</option>
+                                    <option value="Ñorquincó">Ñorquincó</option>
+                                    <option value="Pichi Mahuida">Pichi Mahuida</option>
+                                    <option value="Pilcaniyeu">Pilcaniyeu</option>
+                                    <option value="San Antonio">San Antonio</option>
+                                    <option value="Valcheta">Valcheta</option>
+                                    <option value="25 de Mayo">25 de Mayo</option>
+                                </select>
+                            </div>
+                            <div class="search-dropdown">
+                                <label for="searchTipo">Tipo:</label>
+                                <select id="searchTipo" name="searchTipo">
+                                    <option value="">Todos los tipos</option>
+                                    <option value="Agrícola">Agrícola</option>
+                                    <option value="Agrícola-ganadera">Agrícola-ganadera</option>
+                                    <option value="Consumo">Consumo</option>
+                                    <option value="Federación">Federación</option>
+                                    <option value="Frutícola">Frutícola</option>
+                                    <option value="Frutihortícola">Frutihortícola</option>
+                                    <option value="Ganadera">Ganadera</option>
+                                    <option value="Producción">Producción</option>
+                                    <option value="Provisión">Provisión</option>
+                                    <option value="Servicios">Servicios</option>
+                                    <option value="Servicios públicos">Servicios públicos</option>
+                                    <option value="Trabajo">Trabajo</option>
+                                    <option value="Vivienda">Vivienda</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">Buscar</button>
+                    </form>
+                </div>
                 <div id="searchResults" class="results-container">
                     <!-- Aquí se mostrarán los resultados de búsqueda -->
                 </div>
@@ -238,7 +243,7 @@
             
             <div id="edit" class="tab-content">
                 <h2>Editar Cooperativa</h2>
-                <div class="search-first">
+                <div class="search-container">
                     <p>Primero busca la cooperativa que deseas editar:</p>
                     <form id="editSearchForm">
                         <div class="form-group">
@@ -258,7 +263,7 @@
             
             <div id="delete" class="tab-content">
                 <h2>Eliminar Cooperativa</h2>
-                <div class="search-first">
+                <div class="search-container">
                     <p>Primero busca la cooperativa que deseas eliminar:</p>
                     <form id="deleteSearchForm">
                         <div class="form-group">
