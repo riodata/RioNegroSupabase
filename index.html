@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooperativas de Río Negro</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cooperativas de Río Negro</h1>
+            <div class="filters">
+                <label for="departamento">Departamento:</label>
+                <select id="departamento">
+                    <option value="all">Todos</option>
+                </select>
+                
+                <label for="tipo">Tipo de Cooperativa:</label>
+                <select id="tipo">
+                    <option value="all">Todos</option>
+                </select>
+                
+                <button id="resetFilters">Resetear Filtros</button>
+            </div>
+        </header>
+        
+        <main>
+            <div id="map"></div>
+            <div id="cooperativa-list">
+                <h2>Listado de Cooperativas</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Buscar cooperativa...">
+                </div>
+                <ul id="cooperativas"></ul>
+            </div>
+        </main>
+        
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modal-title"></h2>
+                <div id="modal-content"></div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
