@@ -4,232 +4,456 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Variables globales
-let map;
-let markers = [];
-let cooperativas = [];
-let departamentos = new Set();
-let tipos = new Set();
+let currentTab = 'create';
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', () => {
-    initMap();
-    fetchCooperativas();
+    // Configurar navegación por pestañas
+    setupTabs();
     
-    // Event listeners
-    document.getElementById('departamento').addEventListener('change', filterCooperativas);
-    document.getElementById('tipo').addEventListener('change', filterCooperativas);
-    document.getElementById('resetFilters').addEventListener('click', resetFilters);
-    document.getElementById('searchInput').addEventListener('input', filterCooperativas);
+    // Configurar los formularios
+    setupForms();
     
-    // Modal close
-    document.querySelector('.close').addEventListener('click', () => {
-        document.getElementById('modal').style.display = 'none';
-    });
-    
-    window.addEventListener('click', (event) => {
-        if (event.target === document.getElementById('modal')) {
-            document.getElementById('modal').style.display = 'none';
-        }
-    });
+    // Configurar notificaciones
+    setupNotifications();
 });
 
-// Inicializar el mapa
-function initMap() {
-    map = L.map('map').setView([-40.8, -63.0], 7);
+// Configurar navegación por pestañas
+function setupTabs() {
+    const tabs = document.querySelectorAll('.tab');
     
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    tabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Quitar clase active de todas las pestañas y contenidos
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Añadir clase active a la pestaña seleccionada
+            tab.classList.add('active');
+            
+            // Mostrar contenido correspondiente
+            const targetId = tab.getAttribute('href').substring(1);
+            document.getElementById(targetId).classList.add('active');
+            
+            // Actualizar pestaña actual
+            currentTab = targetId;
+        });
+    });
 }
 
-// Obtener datos de cooperativas desde Supabase
-async function fetchCooperativas() {
+// Configurar formularios
+function setupForms() {
+    // Formulario de creación
+    const createForm = document.getElementById('createForm');
+    createForm.addEventListener('submit', handleCreateSubmit);
+    
+    // Formulario de búsqueda
+    const searchForm = document.getElementById('searchForm');
+    searchForm.addEventListener('submit', handleSearchSubmit);
+    
+    // Formulario de búsqueda para editar
+    const editSearchForm = document.getElementById('editSearchForm');
+    editSearchForm.addEventListener('submit', handleEditSearchSubmit);
+    
+    // Formulario de búsqueda para eliminar
+    const deleteSearchForm = document.getElementById('deleteSearchForm');
+    deleteSearchForm.addEventListener('submit', handleDeleteSearchSubmit);
+}
+
+// Manejar envío del formulario de creación
+async function handleCreateSubmit(e) {
+    e.preventDefault();
+    
     try {
-        // Consultar la tabla Cooperativas
+        // Recopilar datos del formulario
+        const formData = new FormData(e.target);
+        const cooperativaData = {};
+        
+        // Convertir FormData a objeto
+        for (const [key, value] of formData.entries()) {
+            // Manejar campos numéricos
+            if (key === 'Latitud' || key === 'Longitud') {
+                cooperativaData[key] = value ? parseFloat(value) : null;
+            }
+            // Manejar fechas
+            else if (key === 'EmisMat' || key === 'EstadoEntid' || key === 'FechaAsamb') {
+                cooperativaData[key] = value || null;
+            }
+            // Manejar otros campos
+            else {
+                cooperativaData[key] = value || null;
+            }
+        }
+        
+        // Enviar datos a Supabase
         const { data, error } = await supabase
             .from('Cooperativas')
-            .select('*');
+            .insert([cooperativaData]);
             
         if (error) throw error;
         
-        cooperativas = data || [];
+        // Mostrar notificación de éxito
+        showNotification('Cooperativa creada con éxito', 'success');
         
-        // Procesar los datos
-        cooperativas.forEach(coop => {
-            if (coop.departamento) departamentos.add(coop.departamento);
-            if (coop.tipo) tipos.add(coop.tipo);
-        });
-        
-        // Poblar selectores de filtro
-        populateFilters();
-        
-        // Mostrar cooperativas
-        displayCooperativas(cooperativas);
-        addMapMarkers(cooperativas);
+        // Limpiar formulario
+        e.target.reset();
         
     } catch (error) {
-        console.error('Error al obtener datos de cooperativas:', error);
-        alert('Hubo un error al cargar los datos. Por favor, intenta nuevamente más tarde.');
+        console.error('Error al crear cooperativa:', error);
+        showNotification('Error al crear cooperativa: ' + error.message, 'error');
     }
 }
 
-// Poblar los selectores de filtro
-function populateFilters() {
-    const depSelector = document.getElementById('departamento');
-    const tipoSelector = document.getElementById('tipo');
+// Manejar envío del formulario de búsqueda
+async function handleSearchSubmit(e) {
+    e.preventDefault();
     
-    // Limpiar opciones existentes excepto "Todos"
-    while (depSelector.options.length > 1) {
-        depSelector.remove(1);
+    const searchTerm = document.getElementById('searchTerm').value;
+    const departamento = document.getElementById('searchDepartamento').value;
+    const tipo = document.getElementById('searchTipo').value;
+    
+    try {
+        // Construir consulta a Supabase
+        let query = supabase.from('Cooperativas').select('*');
+        
+        // Aplicar filtros si se proporcionan
+        if (searchTerm) {
+            query = query.or(`Cooperativa.ilike.%${searchTerm}%,Matrícula.ilike.%${searchTerm}%,Legajo.ilike.%${searchTerm}%`);
+        }
+        
+        if (departamento) {
+            query = query.eq('Departamento', departamento);
+        }
+        
+        if (tipo) {
+            query = query.eq('Tipo', tipo);
+        }
+        
+        // Ejecutar consulta
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        // Mostrar resultados
+        displaySearchResults(data, 'searchResults');
+        
+    } catch (error) {
+        console.error('Error al buscar cooperativas:', error);
+        showNotification('Error al buscar cooperativas: ' + error.message, 'error');
     }
-    
-    while (tipoSelector.options.length > 1) {
-        tipoSelector.remove(1);
-    }
-    
-    // Añadir departamentos
-    [...departamentos].sort().forEach(dep => {
-        const option = document.createElement('option');
-        option.value = dep;
-        option.textContent = dep;
-        depSelector.appendChild(option);
-    });
-    
-    // Añadir tipos de cooperativas
-    [...tipos].sort().forEach(tipo => {
-        const option = document.createElement('option');
-        option.value = tipo;
-        option.textContent = tipo;
-        tipoSelector.appendChild(option);
-    });
 }
 
-// Mostrar cooperativas en la lista
-function displayCooperativas(coops) {
-    const listElement = document.getElementById('cooperativas');
-    listElement.innerHTML = '';
+// Función para mostrar resultados de búsqueda
+function displaySearchResults(data, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
     
-    if (coops.length === 0) {
-        listElement.innerHTML = '<li class="no-results">No se encontraron cooperativas que coincidan con los filtros.</li>';
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p class="no-results">No se encontraron cooperativas con los criterios de búsqueda.</p>';
         return;
     }
     
-    coops.forEach(coop => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-            <h3>${coop.nombre || 'Sin nombre'}</h3>
-            <p><strong>Localidad:</strong> ${coop.localidad || 'No especificada'}</p>
-            <p><strong>Tipo:</strong> ${coop.tipo || 'No especificado'}</p>
-            <button class="ver-mas" data-id="${coop.id}">Ver más</button>
+    // Crear tabla para mostrar resultados
+    const table = document.createElement('table');
+    table.classList.add('results-table');
+    
+    // Crear encabezados
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+        <tr>
+            <th>Legajo</th>
+            <th>Cooperativa</th>
+            <th>Matrícula</th>
+            <th>Departamento</th>
+            <th>Tipo</th>
+            <th>Acciones</th>
+        </tr>
+    `;
+    table.appendChild(thead);
+    
+    // Crear cuerpo de la tabla
+    const tbody = document.createElement('tbody');
+    
+    data.forEach(coop => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${coop.Legajo || '-'}</td>
+            <td>${coop.Cooperativa || '-'}</td>
+            <td>${coop.Matrícula || '-'}</td>
+            <td>${coop.Departamento || '-'}</td>
+            <td>${coop.Tipo || '-'}</td>
+            <td class="actions">
+                <button class="btn-view" data-id="${coop.id}">Ver</button>
+                <button class="btn-edit" data-id="${coop.id}">Editar</button>
+                <button class="btn-delete" data-id="${coop.id}">Eliminar</button>
+            </td>
         `;
         
-        // Event listener para el botón "Ver más"
-        li.querySelector('.ver-mas').addEventListener('click', () => showCooperativaDetails(coop));
-        
-        listElement.appendChild(li);
+        tbody.appendChild(tr);
+    });
+    
+    table.appendChild(tbody);
+    container.appendChild(table);
+    
+    // Agregar event listeners a los botones
+    container.querySelectorAll('.btn-view').forEach(btn => {
+        btn.addEventListener('click', () => viewCooperativa(btn.dataset.id));
+    });
+    
+    container.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => editCooperativa(btn.dataset.id));
+    });
+    
+    container.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => deleteCooperativa(btn.dataset.id));
     });
 }
 
-// Mostrar detalles de cooperativa en modal
-function showCooperativaDetails(coop) {
-    const modal = document.getElementById('modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalContent = document.getElementById('modal-content');
+// Manejar envío del formulario de búsqueda para editar
+async function handleEditSearchSubmit(e) {
+    e.preventDefault();
     
-    modalTitle.textContent = coop.nombre || 'Cooperativa';
+    const searchTerm = document.getElementById('editSearchTerm').value;
     
-    modalContent.innerHTML = `
-        <p><strong>Matrícula:</strong> ${coop.matricula || 'No especificada'}</p>
-        <p><strong>Tipo:</strong> ${coop.tipo || 'No especificado'}</p>
-        <p><strong>Localidad:</strong> ${coop.localidad || 'No especificada'}</p>
-        <p><strong>Departamento:</strong> ${coop.departamento || 'No especificado'}</p>
-        <p><strong>Dirección:</strong> ${coop.direccion || 'No especificada'}</p>
-        <p><strong>Teléfono:</strong> ${coop.telefono || 'No especificado'}</p>
-        <p><strong>Email:</strong> ${coop.email || 'No especificado'}</p>
-        <p><strong>Sitio Web:</strong> ${coop.sitio_web ? `<a href="${coop.sitio_web}" target="_blank">${coop.sitio_web}</a>` : 'No especificado'}</p>
-    `;
-    
-    modal.style.display = 'block';
-    
-    // Si hay coordenadas, centrar el mapa en la cooperativa
-    if (coop.latitud && coop.longitud) {
-        map.setView([coop.latitud, coop.longitud], 12);
+    try {
+        // Construir consulta a Supabase
+        const { data, error } = await supabase
+            .from('Cooperativas')
+            .select('*')
+            .or(`Cooperativa.ilike.%${searchTerm}%,Matrícula.ilike.%${searchTerm}%,Legajo.ilike.%${searchTerm}%`);
+            
+        if (error) throw error;
         
-        // Resaltar el marcador
-        markers.forEach(marker => {
-            if (marker.coopId === coop.id) {
-                marker.openPopup();
+        // Mostrar resultados
+        displaySearchResults(data, 'editSearchResults');
+        
+    } catch (error) {
+        console.error('Error al buscar cooperativas para editar:', error);
+        showNotification('Error al buscar cooperativas: ' + error.message, 'error');
+    }
+}
+
+// Manejar envío del formulario de búsqueda para eliminar
+async function handleDeleteSearchSubmit(e) {
+    e.preventDefault();
+    
+    const searchTerm = document.getElementById('deleteSearchTerm').value;
+    
+    try {
+        // Construir consulta a Supabase
+        const { data, error } = await supabase
+            .from('Cooperativas')
+            .select('*')
+            .or(`Cooperativa.ilike.%${searchTerm}%,Matrícula.ilike.%${searchTerm}%,Legajo.ilike.%${searchTerm}%`);
+            
+        if (error) throw error;
+        
+        // Mostrar resultados
+        displaySearchResults(data, 'deleteSearchResults');
+        
+    } catch (error) {
+        console.error('Error al buscar cooperativas para eliminar:', error);
+        showNotification('Error al buscar cooperativas: ' + error.message, 'error');
+    }
+}
+
+// Ver detalles de cooperativa
+async function viewCooperativa(id) {
+    try {
+        // Obtener datos de la cooperativa
+        const { data, error } = await supabase
+            .from('Cooperativas')
+            .select('*')
+            .eq('id', id)
+            .single();
+            
+        if (error) throw error;
+        
+        // Mostrar modal o detalles
+        alert(`Detalles de Cooperativa: ${data.Cooperativa}\n` + 
+              `Legajo: ${data.Legajo || '-'}\n` +
+              `Matrícula: ${data.Matrícula || '-'}\n` +
+              `Tipo: ${data.Tipo || '-'}\n` +
+              `Departamento: ${data.Departamento || '-'}\n` +
+              `Localidad: ${data.Localidad || '-'}`);
+        
+    } catch (error) {
+        console.error('Error al obtener detalles de la cooperativa:', error);
+        showNotification('Error al obtener detalles: ' + error.message, 'error');
+    }
+}
+
+// Editar cooperativa
+async function editCooperativa(id) {
+    try {
+        // Obtener datos de la cooperativa
+        const { data, error } = await supabase
+            .from('Cooperativas')
+            .select('*')
+            .eq('id', id)
+            .single();
+            
+        if (error) throw error;
+        
+        // Ir a la pestaña de edición
+        document.querySelector('a[href="#edit"]').click();
+        
+        // Generar y mostrar formulario de edición
+        const editFormContainer = document.getElementById('editFormContainer');
+        
+        // Clonar el formulario de creación y adaptarlo para edición
+        const createForm = document.getElementById('createForm');
+        const editForm = createForm.cloneNode(true);
+        editForm.id = 'editForm';
+        
+        // Cambiar el texto del botón
+        const submitButton = editForm.querySelector('button[type="submit"]');
+        submitButton.textContent = 'Actualizar Registro';
+        
+        // Agregar ID oculto
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        idInput.value = id;
+        editForm.appendChild(idInput);
+        
+        // Llenar formulario con datos existentes
+        for (const key in data) {
+            const input = editForm.elements[key];
+            if (input) {
+                input.value = data[key] || '';
             }
-        });
-    }
-}
-
-// Añadir marcadores al mapa
-function addMapMarkers(coops) {
-    // Limpiar marcadores existentes
-    markers.forEach(marker => map.removeLayer(marker));
-    markers = [];
-    
-    coops.forEach(coop => {
-        if (coop.latitud && coop.longitud) {
-            const marker = L.marker([coop.latitud, coop.longitud])
-                .addTo(map)
-                .bindPopup(`
-                    <strong>${coop.nombre || 'Cooperativa'}</strong><br>
-                    ${coop.tipo || 'No especificado'}<br>
-                    ${coop.localidad || 'No especificada'}<br>
-                    <button class="popup-button" onclick="showCooperativaFromMap(${coop.id})">Ver detalles</button>
-                `);
-                
-            marker.coopId = coop.id;
-            markers.push(marker);
         }
-    });
-}
-
-// Función para mostrar cooperativa desde el mapa
-function showCooperativaFromMap(id) {
-    const coop = cooperativas.find(c => c.id === id);
-    if (coop) {
-        showCooperativaDetails(coop);
+        
+        // Reemplazar evento submit
+        editForm.addEventListener('submit', handleEditSubmit);
+        
+        // Mostrar formulario
+        editFormContainer.innerHTML = '';
+        editFormContainer.appendChild(editForm);
+        editFormContainer.style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error al cargar datos para editar:', error);
+        showNotification('Error al cargar datos: ' + error.message, 'error');
     }
 }
 
-// Filtrar cooperativas
-function filterCooperativas() {
-    const departamento = document.getElementById('departamento').value;
-    const tipo = document.getElementById('tipo').value;
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+// Manejar envío del formulario de edición
+async function handleEditSubmit(e) {
+    e.preventDefault();
     
-    const filtered = cooperativas.filter(coop => {
-        // Filtro por departamento
-        const depMatch = departamento === 'all' || (coop.departamento && coop.departamento === departamento);
+    try {
+        // Recopilar datos del formulario
+        const formData = new FormData(e.target);
+        const cooperativaData = {};
+        let id;
         
-        // Filtro por tipo
-        const tipoMatch = tipo === 'all' || (coop.tipo && coop.tipo === tipo);
+        // Convertir FormData a objeto
+        for (const [key, value] of formData.entries()) {
+            if (key === 'id') {
+                id = value;
+                continue;
+            }
+            
+            // Manejar campos numéricos
+            if (key === 'Latitud' || key === 'Longitud') {
+                cooperativaData[key] = value ? parseFloat(value) : null;
+            }
+            // Manejar fechas
+            else if (key === 'EmisMat' || key === 'EstadoEntid' || key === 'FechaAsamb') {
+                cooperativaData[key] = value || null;
+            }
+            // Manejar otros campos
+            else {
+                cooperativaData[key] = value || null;
+            }
+        }
         
-        // Filtro por búsqueda
-        const searchMatch = !searchTerm || 
-            (coop.nombre && coop.nombre.toLowerCase().includes(searchTerm)) ||
-            (coop.localidad && coop.localidad.toLowerCase().includes(searchTerm)) ||
-            (coop.matricula && coop.matricula.toLowerCase().includes(searchTerm));
+        // Enviar datos a Supabase
+        const { data, error } = await supabase
+            .from('Cooperativas')
+            .update(cooperativaData)
+            .eq('id', id);
+            
+        if (error) throw error;
         
-        return depMatch && tipoMatch && searchMatch;
+        // Mostrar notificación de éxito
+        showNotification('Cooperativa actualizada con éxito', 'success');
+        
+        // Ocultar formulario
+        document.getElementById('editFormContainer').style.display = 'none';
+        
+        // Limpiar resultados de búsqueda
+        document.getElementById('editSearchResults').innerHTML = '';
+        
+        // Limpiar campo de búsqueda
+        document.getElementById('editSearchTerm').value = '';
+        
+    } catch (error) {
+        console.error('Error al actualizar cooperativa:', error);
+        showNotification('Error al actualizar cooperativa: ' + error.message, 'error');
+    }
+}
+
+// Eliminar cooperativa
+async function deleteCooperativa(id) {
+    if (!confirm('¿Estás seguro de que deseas eliminar esta cooperativa? Esta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    try {
+        // Eliminar cooperativa de Supabase
+        const { error } = await supabase
+            .from('Cooperativas')
+            .delete()
+            .eq('id', id);
+            
+        if (error) throw error;
+        
+        // Mostrar notificación de éxito
+        showNotification('Cooperativa eliminada con éxito', 'success');
+        
+        // Actualizar resultados de búsqueda
+        if (currentTab === 'search') {
+            document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+        } else if (currentTab === 'delete') {
+            document.getElementById('deleteSearchForm').dispatchEvent(new Event('submit'));
+        }
+        
+    } catch (error) {
+        console.error('Error al eliminar cooperativa:', error);
+        showNotification('Error al eliminar cooperativa: ' + error.message, 'error');
+    }
+}
+
+// Configurar notificaciones
+function setupNotifications() {
+    const notification = document.getElementById('notification');
+    const closeButton = document.querySelector('.close-notification');
+    
+    closeButton.addEventListener('click', () => {
+        notification.classList.remove('visible');
     });
-    
-    displayCooperativas(filtered);
-    addMapMarkers(filtered);
 }
 
-// Resetear filtros
-function resetFilters() {
-    document.getElementById('departamento').value = 'all';
-    document.getElementById('tipo').value = 'all';
-    document.getElementById('searchInput').value = '';
+// Mostrar notificación
+function showNotification(message, type = 'info') {
+    const notification = document.getElementById('notification');
+    const messageElement = document.getElementById('notificationMessage');
     
-    displayCooperativas(cooperativas);
-    addMapMarkers(cooperativas);
+    // Establecer mensaje
+    messageElement.textContent = message;
+    
+    // Establecer tipo
+    notification.className = 'notification';
+    notification.classList.add(type);
+    notification.classList.add('visible');
+    
+    // Ocultar después de 5 segundos
+    setTimeout(() => {
+        notification.classList.remove('visible');
+    }, 5000);
 }
-
-// Hacer accesible la función showCooperativaFromMap globalmente
-window.showCooperativaFromMap = showCooperativaFromMap;
